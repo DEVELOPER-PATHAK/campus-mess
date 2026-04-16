@@ -38,9 +38,11 @@ const Signup = () => {
       console.log(response.data);
       if(response.data.success){
              alert("Institute registration successfully done");
+
+              navigate(`/admin/dashboard/${payload.instituteId}`);
       }
 
-            navigate('/admin/dashboard')
+          //  navigate('/admin/dashboard')
 
     } catch (error) {
         console.error(error);

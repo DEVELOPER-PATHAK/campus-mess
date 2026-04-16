@@ -9,6 +9,10 @@ import menuModel from "../models/menuModel.js";
 import { sendEmail } from "../util/sendEmail.js";
 // const QRCode = require("qrcode");
 import QRCode from "qrcode"
+import crypto from "crypto"
+// var crypto = require("crypto");
+
+import { razorpayInstance } from "../config/razorpay.js";
 
 export const registerAdmin= async (req,res)=>{
     try {     
@@ -190,6 +194,8 @@ export const sendHostels  = async(req,res) =>{
         );
       }
 
+     const inst= await adminModel.findOne({id:instituteId});
+
      const adm = await adminModel.findOne({ id: instituteId }).populate("hostels");
      console.log(adm);
      if(!adm){
@@ -206,7 +212,8 @@ export const sendHostels  = async(req,res) =>{
      if(listHostels){
         return res.json({
           success:true,
-          listHostels
+          listHostels,
+          inst
         })
      }
      else{
@@ -296,6 +303,9 @@ export const addStudent = async (req,res)=>{
     }
     // console.log("1")
     // check if student already exists
+    //extras
+    const addm= await adminModel.findOne({id:instituteId});
+  
     const existingStudent = await studentModel.findOne({ scholarNo });
     if(existingStudent){
       return res.json({
@@ -307,6 +317,8 @@ export const addStudent = async (req,res)=>{
       // console.log("1")
 
     // create student
+    addm.currentIntake= (addm.currentIntake+1);
+    addm.save();
     const studentData ={ name, scholarNo, email, password, instituteId, hostelNo };
     const std = await studentModel.create(studentData);
 
@@ -403,6 +415,8 @@ export const deleteStudent = async (req, res) => {
         message: " student id is not obtained"
       });
     } 
+    //extras
+     const addm= await adminModel.findOne({id:instituteId});
       
       const host = await hostelModel.findOne({ instituteId: instituteId , hostelNo: hostelId });
       if(!host){
@@ -412,6 +426,9 @@ export const deleteStudent = async (req, res) => {
       });
       }
 
+
+      addm.currentIntake= (addm.currentIntake-1);
+    addm.save();
      
       host.students.pull(id);
       await host.save();
@@ -624,4 +641,99 @@ export const verifyStudent = async (req,res)=>{
     });
    }
 }
+
+
+export const createOrder = async(req,res)=>{
+  try {
+    const { amount } = req.body;
+
+    const options = {
+      amount: amount * 100, // in paise
+      currency: "INR",
+      receipt: "receipt_order_" + Date.now(),
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    res.json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success:false,
+       error: error.message });
+  }
+}
+
+
+export const verifyPayment = async (req,res)=>{
+    try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      res.json({ success: true, message: "Payment verified" });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+
+    res.status(500).json({ 
+      success:false,
+      error: err.message });
+  }
+
+}
+
+export const updateCapacity= async(req,res)=>{
+
+  try {
+      console.log("arpit randibaaz")
+      const {instituteId}=  req.params;
+      const {capacity}= req.body;
+      if(!instituteId || !capacity){
+        return res.json({
+          success:false,
+          message:"can not update capacity"
+        })
+      }
+  
+        console.log("arpit randibaaz")
+      const admin= await adminModel.findOne({id:instituteId});
+  
+      admin.studentLimit= capacity;
+      admin.save();
+    console.log("arpit randibaaz")
+      res.json({
+        success:true,
+        message:"capacity updated successfully",
+        admin
+      })
+
+        console.log("arpit randibaaz")
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success:false,
+      message:"can not update"
+    })
+  }
+
+
+
+
+}
+
+
 

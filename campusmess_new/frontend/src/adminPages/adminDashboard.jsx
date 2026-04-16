@@ -14,9 +14,11 @@ import {
   X, 
   Check, 
   Trash2, 
-  AlertCircle 
+  AlertCircle ,
+  CreditCard
 } from 'lucide-react';
 import { useEffect } from 'react';
+
 
 // --- Mock Data ---
 // Note: Hostels no longer have a 'capacity' limit. 
@@ -38,10 +40,14 @@ const availablePlans = [
 
 const AdminDashboard = () => {
 
-  // Global State
-  const [institutePlan, setInstitutePlan] = useState("Standard Mess");
+  // Global Stat
+
+  const [institutePlan, setInstitutePlan] = useState(0);
+  const [currentIntake, setcurrentIntake] = useState(0);
   const [hostels, setHostels] = useState(initialHostels);
    const { instituteId } = useParams();
+
+   const [paymentStatus, setPaymentStatus]= useState(null);
   
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -56,7 +62,7 @@ const AdminDashboard = () => {
   const totalCurrentStudents = hostels.reduce((acc, curr) => acc + parseInt(curr.students || 0), 0);
   
   // 3. Calculate Global Occupancy Rate (Total Students / Plan Capacity)
-  const planCapacity = currentPlanDetails.maxStudents;
+ const planCapacity = currentPlanDetails.maxStudents;
   const occupancyPercentage = Math.round((totalCurrentStudents / planCapacity) * 100);
 
  
@@ -79,6 +85,12 @@ useEffect(() => {
   no:h.hostelNo
 
 }));
+
+    const capa = response.data.inst.studentLimit;
+    const limi = response.data.inst.currentIntake;
+    console.log(capa);
+    setInstitutePlan(capa);
+    setcurrentIntake(limi)
    
       setHostels(formattedHostels);
     } catch (error) {
@@ -171,12 +183,170 @@ const handleAddHostel = async (newHostel) => {
     }
   };
 
-  const handleGlobalUpgrade = (newPlan) => {
-    setInstitutePlan(newPlan);
-    setIsUpgradeModalOpen(false);
-  };
+
+  let  pay=0;
+
+
+
+
+
+  // const handlePayment = async (amt) => {
+  //   const { data } = await axios.post(
+  //     "http://localhost:4000/api/admin/create-order",
+  //     { amount: amt } // ₹500
+  //   );
+
+  //   const options = {
+  //     key:  "rzp_test_EthSrvsZ4afFRy",
+  //     amount: data.order.amount,
+  //     currency: "INR",
+  //     name: "CampusMess",
+  //     description: "Test Transaction",
+  //     order_id: data.order.id,
+
+  //     handler: async function (response) {
+  //       const verifyRes = await axios.post(
+  //         "http://localhost:4000/api/admin/verify-payment",
+  //         response
+  //       );
+
+  //       if (verifyRes.data.success) {
+  //         alert("Payment Successful ✅");
+  //         pay=1;
+  //         setPaymentStatus(1);
+  //         return 1;
+  //       } else {
+  //         alert("Payment Failed ❌");
+  //         setPaymentStatus(0);
+  //         return 0;
+  //       }
+  //     },
+
+  //     prefill: {
+  //       name: "Test User",
+  //       email: "test@example.com",
+  //       contact: "9999999999",
+  //     },
+
+  //     theme: {
+  //       color: "#3399cc",
+  //     },
+  //   };
+
+  //   const razor = new window.Razorpay(options);
+  //   razor.open();
+  // };
+
+const handlePayment = async (amt) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { data } = await axios.post(
+        "http://localhost:4000/api/admin/create-order",
+        { amount: amt }
+      );
+
+      const options = {
+        key: "rzp_test_EthSrvsZ4afFRy",
+        amount: data.order.amount,
+        currency: "INR",
+        name: "CampusMess",
+        description: "Test Transaction",
+        order_id: data.order.id,
+
+        handler: async function (response) {
+          try {
+            const verifyRes = await axios.post(
+              "http://localhost:4000/api/admin/verify-payment",
+              response
+            );
+
+            if (verifyRes.data.success) {
+              alert("Payment Successful ✅");
+              setPaymentStatus(1);
+              resolve(1); // ✅ RETURN HERE
+            } else {
+              alert("Payment Failed ❌");
+              setPaymentStatus(0);
+              resolve(0);
+            }
+          } catch (err) {
+            resolve(0);
+          }
+        },
+      };
+
+      const razor = new window.Razorpay(options);
+
+      razor.on("payment.failed", function () {
+        alert("Payment Failed ❌");
+        setPaymentStatus(0);
+        resolve(0); // ✅ handle failure event
+      });
+
+      razor.open();
+
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+  const updateCapacityHandler = async (cap)=>{
+    try {
+
+        const payload= {
+          capacity: cap
+        }
+          const response = await axios.post(
+      `http://localhost:4000/api/admin/updateCapacity/${instituteId}`,
+      payload
+    );
+     
+
+    if(response.data.success){
+          setInstitutePlan(response.data.admin.studentLimit)
+    }
+
+
+    } catch (error) {
+      
+    }
+  }
+
+
+  const handleGlobalUpgrade = async (newPlan) => {
+  const val = institutePlan + newPlan;
+
+  const res = await handlePayment(newPlan * 2);
+
+ //  console.log("printing res", res); // ✅ now 1 or 0
+
+  if (res === 1) {
+    await updateCapacityHandler(val);
+    setInstitutePlan(val);
+  }
+
+  setIsUpgradeModalOpen(false);
+};
+ const navigate= useNavigate();
+
+  // const handleGlobalUpgrade = async (newPlan) => {
+  //   const val= institutePlan + newPlan;
+  //   const res=   await  handlePayment(newPlan *2 );
+
+  //   console.log("prnting res");
+  //   console.log(res);
+    
+  //   if(res){
+  //      updateCapacityHandler(val);
+  //      setInstitutePlan(val);
+  //   }
+    
+  //   setIsUpgradeModalOpen(false);
+  // };
 
   return (
+   
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       
       {/* --- Top Navigation & Global Plan Management --- */}
@@ -191,7 +361,10 @@ const handleAddHostel = async (newHostel) => {
               <div className="bg-green-600 text-white p-1.5 rounded-lg">
                 <Home size={20} />
               </div>
-              <span className="text-xl font-bold text-gray-900">CampusMess Admin</span>
+              <div onClick={() => navigate('/')}>
+                 <span  className="text-xl font-bold text-gray-900">CampusMess Admin</span>
+              </div>
+             
             </div>
 
             {/* Right Side: Global Plan & Profile */}
@@ -227,21 +400,21 @@ const handleAddHostel = async (newHostel) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatCard 
             title="Plan Capacity (Max Limit)" 
-            value={planCapacity} 
+            value={institutePlan} 
             subtitle="Based on purchased plan"
             icon={<Crown className="text-blue-600" size={24} />} 
             bg="bg-blue-50"
           />
           <StatCard 
             title="Current Intake" 
-            value={totalCurrentStudents} 
+            value={currentIntake} 
             subtitle="Total students in all hostels"
             icon={<Users className="text-green-600" size={24} />} 
             bg="bg-green-50"
           />
           <StatCard 
             title="Plan Utilization" 
-            value={`${occupancyPercentage}%`} 
+            value={`${(currentIntake*100)/institutePlan}%`} 
             subtitle={occupancyPercentage > 100 ? "Plan Limit Exceeded!" : "of total capacity"}
             icon={<TrendingUp className={occupancyPercentage > 100 ? "text-red-600" : "text-purple-600"} size={24} />} 
             bg={occupancyPercentage > 100 ? "bg-red-50" : "bg-purple-50"}
@@ -442,49 +615,131 @@ const AddHostelModal = ({ isOpen, onClose, onSubmit }) => {
 };
 
 // --- Global Upgrade Modal ---
+// const GlobalUpgradeModal = ({ isOpen, onClose, currentPlan, onConfirm }) => {
+//   if (!isOpen) return null;
+
+//   return (
+//     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+//       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+//         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+//           <div>
+//             <h3 className="text-lg font-bold text-gray-900">Upgrade Institute Plan</h3>
+//             <p className="text-xs text-gray-500">Updates capacity and mess menu.</p>
+//           </div>
+//           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+//         </div>
+        
+//         <div className="p-6 space-y-3">
+//           {availablePlans.map((plan) => {
+//             const isCurrent = plan.name === currentPlan;
+//             return (
+//               <div 
+//                 key={plan.name}
+//                 className={`relative border rounded-lg p-4 cursor-pointer transition-all ${
+//                   isCurrent 
+//                     ? 'border-green-500 bg-green-50 ring-1 ring-green-500' 
+//                     : 'border-gray-200 hover:border-green-300 hover:shadow-sm'
+//                 }`}
+//                 onClick={() => !isCurrent && onConfirm(plan.name)}
+//               >
+//                 <div className="flex justify-between items-center">
+//                   <div>
+//                     <h4 className="font-bold text-gray-900 flex items-center gap-2">
+//                       {plan.name}
+//                       {isCurrent && <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">Active</span>}
+//                     </h4>
+//                     <p className="text-sm font-medium text-gray-700 mt-1">Max Capacity: {plan.maxStudents} Students</p>
+//                     <p className="text-xs text-gray-500">{plan.features}</p>
+//                   </div>
+//                   <div className="text-right">
+//                     <span className="block font-bold text-green-700">{plan.price}</span>
+//                   </div>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
 const GlobalUpgradeModal = ({ isOpen, onClose, currentPlan, onConfirm }) => {
+  // Local state for the dynamic input
+  const [studentCount, setStudentCount] = useState(100); 
+  
   if (!isOpen) return null;
+
+  // Calculation Logic
+  const pricePerStudent = 2;
+  const totalPrice = studentCount * pricePerStudent;
+
+  const handleConfirm = () => {
+    // We send a string back to handleGlobalUpgrade to keep your existing state logic
+    const planString = studentCount;
+    onConfirm(planString);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        
+        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Upgrade Institute Plan</h3>
-            <p className="text-xs text-gray-500">Updates capacity and mess menu.</p>
+            <h3 className="text-lg font-bold text-gray-900">Customize Your Plan</h3>
+            <p className="text-xs text-gray-500">Current: {currentPlan}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={20}/>
+          </button>
         </div>
         
-        <div className="p-6 space-y-3">
-          {availablePlans.map((plan) => {
-            const isCurrent = plan.name === currentPlan;
-            return (
-              <div 
-                key={plan.name}
-                className={`relative border rounded-lg p-4 cursor-pointer transition-all ${
-                  isCurrent 
-                    ? 'border-green-500 bg-green-50 ring-1 ring-green-500' 
-                    : 'border-gray-200 hover:border-green-300 hover:shadow-sm'
-                }`}
-                onClick={() => !isCurrent && onConfirm(plan.name)}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                      {plan.name}
-                      {isCurrent && <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">Active</span>}
-                    </h4>
-                    <p className="text-sm font-medium text-gray-700 mt-1">Max Capacity: {plan.maxStudents} Students</p>
-                    <p className="text-xs text-gray-500">{plan.features}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="block font-bold text-green-700">{plan.price}</span>
-                  </div>
-                </div>
+        <div className="p-6 space-y-6">
+          {/* Input Section */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Users size={16} className="text-blue-500" />
+              Number of Students
+            </label>
+            <input 
+              type="number" 
+              min="1"
+              value={studentCount}
+              onChange={(e) => setStudentCount(Math.max(0, parseInt(e.target.value) || 0))}
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg font-medium"
+              placeholder="Enter student count..."
+            />
+          </div>
+
+          {/* Pricing Display */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 flex justify-between items-center">
+            <div>
+              <p className="text-blue-600 text-xs font-bold uppercase tracking-wider">Total Monthly Price</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold text-blue-900">₹{totalPrice}</span>
+                <span className="text-blue-500 text-sm">/month</span>
               </div>
-            );
-          })}
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-blue-400">₹2.00 per student</p>
+            </div>
+          </div>
+
+          {/* Features Preview */}
+          <div className="text-xs text-gray-500 space-y-1">
+            <p className="flex items-center gap-2">✓ Dynamic capacity for {studentCount} users</p>
+            <p className="flex items-center gap-2">✓ Automatic mess menu scaling</p>
+          </div>
+
+          {/* Action Button */}
+          <button 
+            onClick={handleConfirm}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-200"
+          >
+            <CreditCard size={18} />
+            Confirm Upgrade
+          </button>
         </div>
       </div>
     </div>

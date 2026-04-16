@@ -25,9 +25,9 @@ const MOCK_MENU = {
 };
 
 const MOCK_STATS = {
-  totalStudents: 142,
-  eatingToday: 115,
-  notEatingToday: 27
+  totalStudents: 0,
+  eatingToday: 0,
+  notEatingToday: 0
 };
 
 // --- Sub-Components for Professional Modularity ---
@@ -71,6 +71,8 @@ const HostelDashboard = () => {
   const [scanner, setScanner] = useState(null);
   const [scanning, setScanning] = useState(false);
 
+  const [eat,setEat]= useState(0);
+
   const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
 
   const temp = [];
@@ -92,15 +94,31 @@ const HostelDashboard = () => {
 
         // const list =response.data
 
-        const formattedStudents = response.data.students.map(h => ({
+        const formattedStudents = response.data.students.map(h => (
+          {     
           id: h._id,
           name: h.name,
           scholarNo: h.scholarNo,
           email: h.email,
           password: h.password,
           status: h.status
-
+           
         }));
+
+       let val=0;
+
+       response.data.students.forEach(h => {
+     if (h.status === 'Eating'){
+        val+=1;    
+     }
+    //  else if (h.status === 'notEating') MOCK.notEatingToday+=1;
+    //  MOCK.totalStudents+=1;    
+     });
+
+       setEat(val);
+
+     //  setMOCK_STATS(MOCK);
+
 
         setStudents(formattedStudents);
 
@@ -128,17 +146,6 @@ const HostelDashboard = () => {
   }, []);
 
 
-
-  
-
-
-
-
-  // 'dashboard', 'eating_list', 'not_eating_list', 'all_students'
-
-  // --- Render Functions for Different Views ---
-
-  // 1. The Main Dashboard View
   function generatePassword() {
     let password = "";
     for (let i = 0; i < 8; i++) {
@@ -336,13 +343,13 @@ const HostelDashboard = () => {
         />
         <StatCard
           label="Opted for Meal"
-          value={MOCK_STATS.eatingToday}
+          value={eat}
           icon={Utensils}
           colorClass="bg-green-500"
         />
         <StatCard
           label="Skipping Meal"
-          value={MOCK_STATS.notEatingToday}
+          value={students.length - eat}
           icon={UserMinus}
           colorClass="bg-orange-400"
         />
@@ -381,7 +388,7 @@ const HostelDashboard = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-blue-600 font-semibold mb-1">Eating</p>
-                    <p className="text-2xl font-bold text-gray-800">{MOCK_STATS.eatingToday}</p>
+                    <p className="text-2xl font-bold text-gray-800">{eat}</p>
                   </div>
                   <ChevronRight size={20} className="text-blue-300 group-hover:text-blue-500" />
                 </div>
@@ -395,7 +402,7 @@ const HostelDashboard = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-orange-600 font-semibold mb-1">Not Eating</p>
-                    <p className="text-2xl font-bold text-gray-800">{MOCK_STATS.notEatingToday}</p>
+                    <p className="text-2xl font-bold text-gray-800">{students.length - eat}</p>
                   </div>
                   <ChevronRight size={20} className="text-orange-300 group-hover:text-orange-500" />
                 </div>
@@ -492,12 +499,15 @@ const HostelDashboard = () => {
 
               ))} */}
 
-            {students.map((item, index) => (     
+            {/* {students.map((item, index) =>  {   if(type == eating && item.status != eating) return; }  (   
+             
               <tr
+
                 key={index}
                 className="group hover:bg-gray-50 transition-colors"
-              >
                  
+              >
+             
               <td className="py-4 font-medium text-gray-700">{item.name}</td> 
                 <td className="py-4 text-gray-500">{item.scholarNo}</td> 
                 <td className="py-4">
@@ -519,7 +529,35 @@ const HostelDashboard = () => {
 
                 
               </tr>
-            ))}
+            ))} */}
+            {students.map((item, index) => {
+        if (type === 'eating' && item.status !== 'Eating') return ;
+        if (type === 'noteating' && item.status !== 'notEating') return ;
+
+  return (
+    <tr
+      key={index}
+      className="group hover:bg-gray-50 transition-colors"
+    >
+      <td className="py-4 font-medium text-gray-700">{item.name}</td> 
+      <td className="py-4 text-gray-500">{item.scholarNo}</td> 
+      <td className="py-4">
+        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-semibold">
+          {item.status}
+        </span>
+      </td>
+
+      {type === 'all' && (
+        <td
+          onClick={() => handleDeleteStudent(item.id)}
+          className="py-4 text-right text-red-500 cursor-pointer text-sm font-medium"
+        >
+          Remove
+        </td>
+      )}
+    </tr>
+  );
+})}
 
 
           </tbody>
@@ -530,7 +568,7 @@ const HostelDashboard = () => {
 
   return (
     <div>
-
+{/* 
  <div style={{ textAlign: "center" }}>
 
       <h2>QR Code Scanner</h2>
@@ -550,7 +588,47 @@ const HostelDashboard = () => {
         style={{ width: "300px", margin: "auto", marginTop: "20px" }}
       ></div>
 
-    </div>
+    </div> */}
+
+<div style={{ textAlign: "center", padding: "24px", backgroundColor: "#f8f9fa", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", maxWidth: "400px", margin: "20px auto", fontFamily: "sans-serif" }}>
+
+  <h2 style={{ color: "#212529", marginBottom: "20px", fontSize: "1.5rem" }}>QR Code Scanner</h2>
+
+  <button 
+    onClick={startScanner}
+    style={{ padding: "10px 24px", margin: "0 8px", backgroundColor: "#0d6efd", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "1rem", fontWeight: "500" }}
+  >
+    Open Camera
+  </button>
+
+  {scanning && (
+    <button 
+      onClick={stopScanner}
+      style={{ padding: "10px 24px", margin: "0 8px", backgroundColor: "#dc3545", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "1rem", fontWeight: "500" }}
+    >
+      Stop Camera
+    </button>
+  )}
+
+  <div
+    id="reader"
+    style={{ 
+      width: "300px", 
+      margin: "auto", 
+      marginTop: "24px", 
+      border: "2px dashed #dee2e6", 
+      borderRadius: "8px", 
+      backgroundColor: "#ffffff", 
+      minHeight: "300px", 
+      display: scanning ? "flex" : "none", /* This hides the box when not scanning */
+      alignItems: "center", 
+      justifyContent: "center" 
+    }}
+  ></div>
+
+</div>
+    
+    
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <header className="mb-8 flex justify-between items-center">
         <div>

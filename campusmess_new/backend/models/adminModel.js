@@ -30,7 +30,7 @@ const adminSchema = new mongoose.Schema({
     },
     studentLimit:{
         type:Number,
-        default:10
+        default:2
     },
     currentIntake:{
         type:Number,
