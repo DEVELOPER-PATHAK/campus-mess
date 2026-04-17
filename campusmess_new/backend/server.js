@@ -21,8 +21,8 @@ app.get('/',
     (req,res)=> res.send("API IS WORKING FINE")
 )
 
-app.listen(PORT,
-    ()=> console.log('server is running on  port '+PORT)
-)
+// app.listen(PORT,
+//     ()=> console.log('server is running on  port '+PORT)
+// )
 
 export default app;
