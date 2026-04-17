@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.4",
     "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",

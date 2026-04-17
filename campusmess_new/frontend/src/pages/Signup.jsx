@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 const Signup = () => {
      const navigate= useNavigate();
 
+     const backendUrl= import.meta.env.VITE_BACKEND_URL
+
   const handleSubmit = async(e)=>{
     e.preventDefault();
     const formData= new FormData(e.target);
@@ -34,7 +36,7 @@ const Signup = () => {
     }
 
     try {
-      const response= await axios.post('http://localhost:4000/api/admin/register',payload);
+      const response= await axios.post( backendUrl+  '/api/admin/register',payload);
       console.log(response.data);
       if(response.data.success){
              alert("Institute registration successfully done");

@@ -64,6 +64,8 @@ const ActionButton = ({ icon: Icon, label, onClick, variant = 'primary' }) => {
 
 const HostelDashboard = () => {
   // State Management
+
+  const backendUrl= import.meta.env.VITE_BACKEND_URL
   const [menu, setMenu] = useState(MOCK_MENU);
   const [mealPrice, setMealPrice] = useState(120); // Dynamic Pricing State
   const [viewState, setViewState] = useState('dashboard');
@@ -86,10 +88,11 @@ const HostelDashboard = () => {
       try {
         // const response = await axios.get("/api/getHostels");
         const response = await axios.get(
-          `http://localhost:4000/api/admin/fetchStudents/${instituteId}/${hostelId}`
+          backendUrl+
+          `/api/admin/fetchStudents/${instituteId}/${hostelId}`
         );
         const menuresponse = await axios.get(
-          `http://localhost:4000/api/admin/fetchMenu/${instituteId}/${hostelId}`
+           backendUrl+ `/api/admin/fetchMenu/${instituteId}/${hostelId}`
         );
 
         // const list =response.data
@@ -167,7 +170,8 @@ const HostelDashboard = () => {
     try {
 
       const response = await axios.post(
-        `http://localhost:4000/api/admin/addStudent/${instituteId}/${hostelId}`,
+        backendUrl+
+        `/api/admin/addStudent/${instituteId}/${hostelId}`,
         payload
       );
 
@@ -197,7 +201,7 @@ const HostelDashboard = () => {
 
 
         const emailresponse =
-          await axios.post("http://localhost:4000/api/admin/sendEmail", {
+          await axios.post( backendUrl+"/api/admin/sendEmail", {
             name: saved.name,
             email: saved.email,
             password: saved.password,
@@ -226,7 +230,7 @@ const HostelDashboard = () => {
      };
 
       const response = await axios.post(
-          `http://localhost:4000/api/admin/verifyStudent`,
+          backendUrl+ `/api/admin/verifyStudent`,
           payload
         );
 
@@ -284,7 +288,8 @@ const HostelDashboard = () => {
     try {
 
       const response = await axios.post(
-        `http://localhost:4000/api/admin/updateMenu/${instituteId}/${hostelId}`,
+        backendUrl+
+        `/api/admin/updateMenu/${instituteId}/${hostelId}`,
         payload
       );
 
@@ -311,7 +316,8 @@ const HostelDashboard = () => {
         const payload = { id: id };
 
         const response = await axios.post(
-          `http://localhost:4000/api/admin/removeStudent/${instituteId}/${hostelId}`,
+          backendUrl+
+          `/api/admin/removeStudent/${instituteId}/${hostelId}`,
           payload
         );
 

@@ -5,6 +5,8 @@ const StudentDesktopDashboard = () => {
   // A single master state for the entire day
   const [isEatingToday, setIsEatingToday] = useState(true);
 
+  const backendUrl= import.meta.env.VITE_BACKEND_URL
+
   const { scholarNo } = useParams();
 
   const temp={};
@@ -41,7 +43,7 @@ useEffect(() => {
          scholarNo:scholarNo
       };
        const response =   await axios.post(
-     `http://localhost:4000/api/student/fetchStudentDetails`, payload
+       backendUrl+  `/api/student/fetchStudentDetails`, payload
     );
 
   const studentData = {
@@ -72,7 +74,7 @@ useEffect(() => {
   };
 
      const response2 =   await axios.post(
-     `http://localhost:4000/api/student/fetchMenuDetails`, payload2
+      backendUrl+ `/api/student/fetchMenuDetails`, payload2
     );
 
 
@@ -117,7 +119,7 @@ const handleStatusChange =  async (data)=>{
    
 try {  
      const response =   await axios.post(
-       `http://localhost:4000/api/student/updateStatus`, payload
+        backendUrl+  `/api/student/updateStatus`, payload
       );
      
       console.log(response);

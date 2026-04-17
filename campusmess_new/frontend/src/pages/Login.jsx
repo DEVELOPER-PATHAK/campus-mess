@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
 
+  const backendUrl= import.meta.env.VITE_BACKEND_URL
+
   const [userType, setUserType] = useState('student'); // 'student' or 'institute'
   const navigate= useNavigate();
 
@@ -20,7 +22,7 @@ const Login = () => {
     };
 
     try {
-         const response= await axios.post('http://localhost:4000/api/admin/login',payload);
+         const response= await axios.post(  backendUrl+  '/api/admin/login',payload);
          console.log(response.data)
          if(response.data.success){
           alert("login successfully done")
@@ -48,7 +50,7 @@ const Login = () => {
     };
 
     try {
-        const response= await axios.post('http://localhost:4000/api/student/login',payload);
+        const response= await axios.post( backendUrl+ '/api/student/login',payload);
         if(response.data.success){
           alert("student logged in successfully")
 

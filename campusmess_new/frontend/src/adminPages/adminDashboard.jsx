@@ -42,6 +42,8 @@ const AdminDashboard = () => {
 
   // Global Stat
 
+  const backendUrl= import.meta.env.VITE_BACKEND_URL
+
   const [institutePlan, setInstitutePlan] = useState(0);
   const [currentIntake, setcurrentIntake] = useState(0);
   const [hostels, setHostels] = useState(initialHostels);
@@ -72,7 +74,7 @@ useEffect(() => {
     try {
       // const response = await axios.get("/api/getHostels");
        const response =   await axios.get(
-     `http://localhost:4000/api/admin/fetchHostel/${instituteId}`
+       backendUrl+ `/api/admin/fetchHostel/${instituteId}`
     );
 
     // const list =response.data
@@ -117,7 +119,7 @@ const handleAddHostel = async (newHostel) => {
     console.log("Payload:", payload);
 
     const response = await axios.post(
-      `http://localhost:4000/api/admin/addHostel/${instituteId}`,
+       backendUrl+  `/api/admin/addHostel/${instituteId}`,
       payload
     );
 
@@ -166,7 +168,9 @@ const handleAddHostel = async (newHostel) => {
         const payload = { id:id};
  
            const response = await axios.post(
-       `http://localhost:4000/api/admin/removeHostel/${instituteId}`,
+
+            backendUrl+
+       `/api/admin/removeHostel/${instituteId}`,
        payload
      );
  
@@ -241,7 +245,7 @@ const handlePayment = async (amt) => {
   return new Promise(async (resolve, reject) => {
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/api/admin/create-order",
+         backendUrl+"/api/admin/create-order",
         { amount: amt }
       );
 
@@ -256,7 +260,7 @@ const handlePayment = async (amt) => {
         handler: async function (response) {
           try {
             const verifyRes = await axios.post(
-              "http://localhost:4000/api/admin/verify-payment",
+            backendUrl+  "/api/admin/verify-payment",
               response
             );
 
@@ -298,7 +302,7 @@ const handlePayment = async (amt) => {
           capacity: cap
         }
           const response = await axios.post(
-      `http://localhost:4000/api/admin/updateCapacity/${instituteId}`,
+      backendUrl+  `/api/admin/updateCapacity/${instituteId}`,
       payload
     );
      
